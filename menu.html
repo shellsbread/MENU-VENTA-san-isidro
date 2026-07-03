@@ -123,6 +123,15 @@
     </div>
 </div>
 
+<!-- Carrito flotante -->
+<button id="float-cart" onclick="openCart()" class="hidden fixed left-1/2 -translate-x-1/2 bottom-5 z-[250] items-center gap-2 bg-[#F5C400] text-black font-bold px-5 py-3 rounded-full shadow-2xl hover:scale-105 transition-transform">
+    <i class="fas fa-shopping-bag"></i>
+    <span id="float-cart-count">0</span>
+    <span class="opacity-50">·</span>
+    <span id="float-cart-total">$0</span>
+    <span class="ml-1">Ver pedido →</span>
+</button>
+
 <div id="toast" class="toast"></div>
 
 <script>
@@ -333,14 +342,20 @@ function updateCartUI(){
     badge.textContent=count;
     count>0?badge.classList.remove('hidden'):badge.classList.add('hidden');
     document.getElementById('cart-total').textContent=`$${total}`;
+    const fc=document.getElementById('float-cart');
+    const cartOpen=document.getElementById('cart-panel').classList.contains('open');
+    if(count>0&&!cartOpen){fc.classList.remove('hidden');fc.classList.add('flex');}
+    else{fc.classList.add('hidden');fc.classList.remove('flex');}
+    document.getElementById('float-cart-count').textContent=count+(count===1?' art.':' art.');
+    document.getElementById('float-cart-total').textContent=`$${total}`;
     const el=document.getElementById('cart-items');
     if(cart.length===0){el.innerHTML=`<p class="text-white/30 text-sm text-center py-8">Tu carrito está vacío</p>`;refreshModalControls();return;}
     el.innerHTML=cart.map(item=>`<div class="item-row py-3 flex items-center justify-between gap-3"><div class="flex-1 min-w-0"><p class="text-white text-sm font-medium truncate">${item.name}${item.size?` <span class="text-white/50">(${item.size})</span>`:''}</p><p class="text-[#F5C400] text-xs">$${item.price} c/u</p></div><div class="flex items-center gap-2"><button class="qty-btn bg-white/10 hover:bg-white/20 text-white" onclick="removeFromCart('${ea(item.name)}','${ea(item.size||'')}')">−</button><span class="text-white font-bold w-5 text-center text-sm">${item.qty}</span><button class="qty-btn bg-[#F5C400]/20 hover:bg-[#F5C400]/40 text-[#F5C400]" onclick="addToCart('${ea(item.name)}',${item.price},'','${ea(item.size||'')}')">+</button></div><span class="text-white font-bold text-sm w-14 text-right">$${item.price*item.qty}</span></div>`).join('');
     refreshModalControls();
 }
 
-function openCart(){document.getElementById('cart-panel').classList.add('open');document.getElementById('cart-overlay').classList.add('active');}
-function closeCart(){document.getElementById('cart-panel').classList.remove('open');document.getElementById('cart-overlay').classList.remove('active');}
+function openCart(){document.getElementById('cart-panel').classList.add('open');document.getElementById('cart-overlay').classList.add('active');document.getElementById('float-cart').classList.add('hidden');document.getElementById('float-cart').classList.remove('flex');}
+function closeCart(){document.getElementById('cart-panel').classList.remove('open');document.getElementById('cart-overlay').classList.remove('active');updateCartUI();}
 
 // ==================== ENVÍO DE PEDIDO (Firebase) ====================
 function sendOrder(){
