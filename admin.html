@@ -95,6 +95,7 @@ tr.low td{background:rgba(239,68,68,.08)}
     <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
       <h1 class="logo-font text-2xl font-bold">Pedidos en cocina</h1>
       <div class="flex items-center gap-2">
+        <button class="btn btn-gold" onclick="openPOS()"><i class="fas fa-plus"></i> Orden</button>
         <label class="text-xs text-white/50 flex items-center gap-2"><input type="checkbox" id="soundToggle" checked> <i class="fas fa-volume-high"></i> Sonido</label>
         <button class="btn btn-ghost" onclick="renderAll()"><i class="fas fa-rotate"></i> Actualizar</button>
       </div>
@@ -108,17 +109,20 @@ tr.low td{background:rgba(239,68,68,.08)}
     <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
       <h1 class="logo-font text-2xl font-bold">Caja</h1>
       <div class="flex gap-2">
+        <button class="btn btn-ghost" onclick="openFondo()"><i class="fas fa-wallet"></i> Fondo</button>
         <button class="btn btn-red" onclick="openGastoModal()"><i class="fas fa-money-bill-wave"></i> Registrar gasto</button>
         <button class="btn btn-ghost" onclick="corteCaja()"><i class="fas fa-receipt"></i> Corte de caja (hoy)</button>
       </div>
     </div>
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-5">
       <div class="card p-4"><p class="text-white/40 text-xs uppercase tracking-wider">Cobrado hoy</p><p class="stat-num gold" id="caja-hoy">$0</p></div>
       <div class="card p-4"><p class="text-white/40 text-xs uppercase tracking-wider">Personas hoy</p><p class="stat-num text-blue-300" id="caja-personas">0</p></div>
       <div class="card p-4"><p class="text-white/40 text-xs uppercase tracking-wider">Pedidos cobrados</p><p class="stat-num" id="caja-count">0</p></div>
-      <div class="card p-4"><p class="text-white/40 text-xs uppercase tracking-wider">Efectivo</p><p class="stat-num text-green-400" id="caja-efectivo">$0</p></div>
+      <div class="card p-4"><p class="text-white/40 text-xs uppercase tracking-wider">Efectivo (ventas)</p><p class="stat-num text-green-400" id="caja-efectivo">$0</p></div>
       <div class="card p-4"><p class="text-white/40 text-xs uppercase tracking-wider">Tarjeta / Transf.</p><p class="stat-num text-blue-400" id="caja-otros">$0</p></div>
       <div class="card p-4"><p class="text-white/40 text-xs uppercase tracking-wider">Gastos hoy</p><p class="stat-num text-red-400" id="caja-gastos">$0</p></div>
+      <div class="card p-4 cursor-pointer hover:border-[#F5C400]/40" onclick="openFondo()"><p class="text-white/40 text-xs uppercase tracking-wider">Fondo <i class="fas fa-pen text-[10px]"></i></p><p class="stat-num text-white/80" id="caja-fondo">$0</p></div>
+      <div class="card p-4 border-2" style="border-color:rgba(34,197,94,.35)"><p class="text-white/40 text-xs uppercase tracking-wider">Efectivo en cajón</p><p class="stat-num text-green-400" id="caja-cajon">$0</p><p class="text-white/30 text-xs">fondo + efectivo</p></div>
     </div>
     <h2 class="font-semibold mb-3 text-white/70">Pedidos por cobrar</h2>
     <div id="caja-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
@@ -329,6 +333,34 @@ tr.low td{background:rgba(239,68,68,.08)}
   </div>
 </div>
 
+<!-- Modal POS (nueva orden para el personal) -->
+<div class="modal-bg" id="posModal">
+  <div class="card w-full max-w-4xl p-0 overflow-hidden flex flex-col" style="height:92vh">
+    <div class="flex items-center justify-between p-4 border-b border-white/10">
+      <h3 class="logo-font text-xl font-bold"><i class="fas fa-plus-circle gold"></i> Nueva orden</h3>
+      <button onclick="closeModal('posModal')" class="text-white/60 hover:text-white text-3xl leading-none">×</button>
+    </div>
+    <div class="flex flex-col md:flex-row flex-1 min-h-0">
+      <div class="flex-1 flex flex-col min-w-0 md:border-r border-white/10 min-h-0">
+        <div id="pos-cat-tabs" class="flex gap-1 p-2 overflow-x-auto border-b border-white/10"></div>
+        <div id="pos-items" class="flex-1 overflow-y-auto px-4 py-2"></div>
+      </div>
+      <div class="w-full md:w-80 flex flex-col bg-black/30 border-t md:border-t-0 border-white/10 min-h-0">
+        <div class="p-3 border-b border-white/10 grid grid-cols-2 gap-2">
+          <input id="pos-name" class="inp" placeholder="Nombre / Mesa *">
+          <input id="pos-phone" class="inp" placeholder="Celular (opcional)" inputmode="numeric">
+        </div>
+        <div id="pos-ticket" class="flex-1 overflow-y-auto p-3 space-y-1" style="min-height:80px"></div>
+        <div class="p-3 border-t border-white/10">
+          <div class="flex justify-between mb-3"><span class="text-white/60">Total</span><span id="pos-total" class="gold font-bold text-2xl">$0</span></div>
+          <button class="btn btn-gold w-full" onclick="posSend()"><i class="fas fa-paper-plane"></i> Enviar a cocina</button>
+          <button class="btn btn-ghost w-full mt-2" onclick="posClear()">Vaciar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal receta -->
 <div class="modal-bg" id="recetaModal">
   <div class="card p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
@@ -340,6 +372,20 @@ tr.low td{background:rgba(239,68,68,.08)}
     <div class="flex gap-2 mt-5">
       <button class="btn btn-ghost flex-1" onclick="closeModal('recetaModal')">Cancelar</button>
       <button class="btn btn-gold flex-1" onclick="saveReceta()"><i class="fas fa-floppy-disk"></i> Guardar receta</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal fondo de caja -->
+<div class="modal-bg" id="fondoModal">
+  <div class="card p-6 w-full max-w-sm">
+    <h3 class="logo-font text-xl font-bold mb-1"><i class="fas fa-wallet gold"></i> Fondo de caja</h3>
+    <p class="text-white/40 text-sm mb-4">Dinero con el que empieza la caja para dar cambio (lo deja el dueño).</p>
+    <label class="text-xs text-white/50">Monto del fondo</label>
+    <input class="inp mt-1" id="fondo-input" type="number" step="any" placeholder="0">
+    <div class="flex gap-2 mt-5">
+      <button class="btn btn-ghost flex-1" onclick="closeModal('fondoModal')">Cancelar</button>
+      <button class="btn btn-gold flex-1" onclick="saveFondo()">Guardar</button>
     </div>
   </div>
 </div>
@@ -393,9 +439,13 @@ const MENU_DATA = {
     {name:"Croissant Almendras",price:75},{name:"Croissant Lotus",price:75}
   ],
   bebidas:[
-    {name:"Latte (Rocks)",price:70},{name:"Americano (Rocks)",price:55},{name:"Dirty Chai (Rocks)",price:80},
+    {name:"Latte (Rocks)",price:70,sizes:[{label:"Chico $70",price:70},{label:"Grande $80",price:80}]},
+    {name:"Americano (Rocks)",price:55},
+    {name:"Dirty Chai (Rocks)",price:80,sizes:[{label:"Chico $80",price:80},{label:"Grande $90",price:90}]},
     {name:"Matcha (Rocks)",price:80},{name:"Brown Sugar Latte",price:90},
-    {name:"Frappe Mocha",price:80},{name:"Frappe Matcha",price:80},{name:"Frappe Chai",price:75},{name:"Frappe Cajeta",price:90},
+    {name:"Frappe Mocha",price:80},{name:"Frappe Matcha",price:80},
+    {name:"Frappe Chai",price:75,sizes:[{label:"Chico $75",price:75},{label:"Grande $85",price:85}]},
+    {name:"Frappe Cajeta",price:90},
     {name:"Capuchino",price:85},{name:"Americano Caliente",price:55},{name:"Latte Caliente",price:80},{name:"Expreso",price:40}
   ]
 };
@@ -404,6 +454,7 @@ const SECTION_TITLES={alimentos:"Alimentos",desayunos:"Desayunos","pan-salado":"
 /* ============ Datos en tiempo real (Firebase) ============ */
 // Cachés locales que se llenan con los listeners de Firebase (ver setupListeners abajo).
 let ordersCache={}, invCache={}, costsCache={}, expCache={}, recipesCache={};
+let cashFloatCache=0;
 let invView='insumos';
 function getOrders(){return Object.values(ordersCache);}
 function getInv(){return Object.values(invCache);}
@@ -415,6 +466,7 @@ const norm=s=>(s||'').toString().trim().toLowerCase();
 const itemLabel=i=>i.name+(i.size?' ('+i.size+')':'');
 const ea=s=>(s||'').toString().replace(/\\/g,'\\\\').replace(/'/g,"\\'");
 const slugify=s=>(s||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'-');
+const sizeName=s=>s.label.split('$')[0].trim();
 
 /* ============ Toast + sonido ============ */
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
@@ -434,7 +486,15 @@ const OWNER={user:'marce',pass:'shellsmarce1'};
 const PROTECTED=['costos','reportes'];
 let ownerAuth=false;
 try{ownerAuth=sessionStorage.getItem('shellsOwnerAuth')==='1';}catch(e){}
-let pendingTab=null;
+let pendingTab=null, pendingAction=null;
+// Ejecuta fn si el dueño ya inició sesión; si no, pide login y luego la ejecuta.
+function ensureOwner(fn){
+  if(ownerAuth){fn();return;}
+  pendingAction=fn;
+  document.getElementById('login-err').classList.add('hidden');
+  openModal('loginModal');
+  setTimeout(()=>{var el=document.getElementById('login-user');if(el)el.focus();},100);
+}
 window.doLogin=function(){
   const u=document.getElementById('login-user').value.trim();
   const p=document.getElementById('login-pass').value;
@@ -443,7 +503,8 @@ window.doLogin=function(){
     document.getElementById('login-err').classList.add('hidden');
     document.getElementById('login-user').value='';document.getElementById('login-pass').value='';
     closeModal('loginModal');
-    const t=pendingTab||'reportes';pendingTab=null;switchTab(t);
+    if(pendingAction){const a=pendingAction;pendingAction=null;a();}
+    else{const t=pendingTab||'reportes';pendingTab=null;switchTab(t);}
   }else{document.getElementById('login-err').classList.remove('hidden');}
 };
 window.logoutOwner=function(){
@@ -548,6 +609,8 @@ function renderCaja(){
   document.getElementById('caja-otros').textContent=money(tot-efe);
   document.getElementById('caja-personas').textContent=personasHoy;
   document.getElementById('caja-gastos').textContent=money(gastosHoy);
+  document.getElementById('caja-fondo').textContent=money(cashFloatCache);
+  document.getElementById('caja-cajon').textContent=money(cashFloatCache+efe);
   updateBadge('badge-caja',list.filter(o=>o.status==='listo').length);
 }
 window.openPay=function(id){
@@ -601,8 +664,18 @@ function corteCaja(){
   const efe=c.filter(o=>o.paymentMethod==='efectivo').reduce((s,o)=>s+o.total,0);
   const tar=c.filter(o=>o.paymentMethod==='tarjeta').reduce((s,o)=>s+o.total,0);
   const tra=c.filter(o=>o.paymentMethod==='transferencia').reduce((s,o)=>s+o.total,0);
-  alert(`CORTE DE CAJA — ${new Date().toLocaleDateString('es-MX')}\n\nPedidos cobrados: ${c.length}\nEfectivo: ${money(efe)}\nTarjeta: ${money(tar)}\nTransferencia: ${money(tra)}\n────────────────\nTOTAL: ${money(tot)}`);
+  const gas=getExp().filter(e=>inRange(e.fecha,'today')).reduce((s,e)=>s+(+e.monto),0);
+  alert(`CORTE DE CAJA — ${new Date().toLocaleDateString('es-MX')}\n\nPedidos cobrados: ${c.length}\nEfectivo (ventas): ${money(efe)}\nTarjeta: ${money(tar)}\nTransferencia: ${money(tra)}\nGastos del día: ${money(gas)}\n────────────────\nVENTA TOTAL: ${money(tot)}\n\nFondo inicial: ${money(cashFloatCache)}\nEfectivo esperado en cajón: ${money(cashFloatCache+efe)}\n(fondo + efectivo de ventas)`);
 }
+window.openFondo=function(){
+  document.getElementById('fondo-input').value=cashFloatCache||'';
+  openModal('fondoModal');
+};
+window.saveFondo=function(){
+  const n=+document.getElementById('fondo-input').value||0;
+  db.ref('settings/cashFloat').set(n);
+  closeModal('fondoModal');showToast('Fondo actualizado: '+money(n));
+};
 
 /* ============ TICKET: WhatsApp e impresión ============ */
 function waNumber(phone){
@@ -681,6 +754,62 @@ window.printTicket=function(id){
   w.document.write(ticketHTML(o));w.document.close();
 };
 
+/* ============ POS: Nueva orden (personal) ============ */
+let posCart=[], posCat='alimentos', posSel={};
+function posKey(n,s){return n+'|'+(s||'');}
+window.openPOS=function(){ posCat='alimentos'; renderPOS(); openModal('posModal'); };
+window.posClear=function(){ posCart=[]; renderPOS(); };
+window.posSetCat=function(c){ posCat=c; renderPOS(); };
+window.posPickSize=function(name,price,size){ posSel[slugify(name)]={price:+price,size}; renderPOS(); };
+window.posAdd=function(name,price,size){
+  size=size||''; const f=posCart.find(i=>posKey(i.name,i.size)===posKey(name,size));
+  if(f)f.qty++; else posCart.push({name,price:+price,size,qty:1});
+  renderPOS();
+};
+window.posRemove=function(name,size){
+  size=size||''; const idx=posCart.findIndex(i=>posKey(i.name,i.size)===posKey(name,size));
+  if(idx<0)return; if(posCart[idx].qty>1)posCart[idx].qty--; else posCart.splice(idx,1);
+  renderPOS();
+};
+function renderPOS(){
+  document.getElementById('pos-cat-tabs').innerHTML=Object.keys(MENU_DATA).map(c=>
+    `<button class="tab-btn ${c===posCat?'active':''}" onclick="posSetCat('${c}')">${SECTION_TITLES[c]}</button>`).join('');
+  const items=MENU_DATA[posCat]||[];
+  document.getElementById('pos-items').innerHTML=items.map(it=>{
+    const hasSizes=it.sizes&&it.sizes.length>0; const slug=slugify(it.name);
+    if(!posSel[slug])posSel[slug]=hasSizes?{price:it.sizes[0].price,size:sizeName(it.sizes[0])}:{price:it.price,size:''};
+    const sel=posSel[slug];
+    const key=posKey(it.name,sel.size); const ci=posCart.find(x=>posKey(x.name,x.size)===key); const qty=ci?ci.qty:0;
+    const sizes=hasSizes?`<div class="flex gap-1 flex-wrap mt-1">`+it.sizes.map(s=>{const sn=sizeName(s);return `<button class="size-btn ${sel.size===sn?'selected':''}" onclick="posPickSize('${ea(it.name)}',${s.price},'${ea(sn)}')">${s.label}</button>`;}).join('')+`</div>`:'';
+    const ctrl=qty>0?`<div class="flex items-center gap-2 flex-shrink-0"><button class="qty-btn bg-white/15 text-white" onclick="posRemove('${ea(it.name)}','${ea(sel.size||'')}')">−</button><span class="gold font-bold w-6 text-center">${qty}</span><button class="qty-btn bg-[#F5C400] text-black" onclick="posAdd('${ea(it.name)}',${sel.price},'${ea(sel.size||'')}')">+</button></div>`:`<button class="add-btn bg-[#F5C400] text-black w-9 h-9 rounded-full font-bold text-xl flex items-center justify-center flex-shrink-0" onclick="posAdd('${ea(it.name)}',${sel.price},'${ea(sel.size||'')}')">+</button>`;
+    return `<div class="flex justify-between items-center gap-3 py-2 border-b border-white/10"><div class="flex-1 min-w-0"><p class="text-sm font-medium">${it.name}</p><p class="text-[#F5C400] text-xs" id="pos-price-${slug}">$${sel.price}</p>${sizes}</div>${ctrl}</div>`;
+  }).join('');
+  const tk=document.getElementById('pos-ticket');
+  if(!posCart.length){tk.innerHTML='<p class="text-white/30 text-sm text-center py-6">Sin productos aún</p>';}
+  else tk.innerHTML=posCart.map(i=>`<div class="flex items-center justify-between gap-2 text-sm border-b border-white/5 py-1"><span class="flex-1 min-w-0 truncate">${i.qty}× ${itemLabel(i)}</span><span class="gold">${money(i.price*i.qty)}</span><button class="text-white/40 hover:text-red-400 ml-1" onclick="posRemove('${ea(i.name)}','${ea(i.size||'')}')">✕</button></div>`).join('');
+  document.getElementById('pos-total').textContent=money(posCart.reduce((s,i)=>s+i.price*i.qty,0));
+}
+window.posSend=function(){
+  if(!posCart.length){showToast('Agrega productos');return;}
+  const name=document.getElementById('pos-name').value.trim();
+  if(!name){showToast('Escribe nombre / mesa');return;}
+  const phone=document.getElementById('pos-phone').value.trim();
+  const items=posCart.map(i=>({...i}));
+  const total=items.reduce((s,i)=>s+i.price*i.qty,0);
+  const id=Date.now();
+  db.ref('orders').once('value').then(snap=>{
+    const all=snap.val()||{};
+    const ex=Object.values(all).find(o=>o&&o.table&&norm(o.table)===norm(name)&&o.status!=='cobrado'&&o.status!=='cancelado');
+    if(ex){
+      const merged=Array.isArray(ex.items)?ex.items.map(i=>({...i})):[];
+      items.forEach(c=>{const f=merged.find(i=>posKey(i.name,i.size)===posKey(c.name,c.size));if(f)f.qty+=c.qty;else merged.push({...c});});
+      return db.ref('orders/'+ex.id).update({items:merged,total:merged.reduce((s,i)=>s+i.price*i.qty,0),status:'nuevo',phone:phone||ex.phone||''}).then(()=>'Se sumó al pedido de '+ex.table+' 🍞');
+    }
+    return db.ref('orders/'+id).set({id,table:name,phone,notes:'',items,total,status:'nuevo',createdAt:new Date().toISOString()}).then(()=>'¡Orden enviada a cocina! 🍞');
+  }).then(msg=>{posClear();document.getElementById('pos-name').value='';document.getElementById('pos-phone').value='';closeModal('posModal');showToast(msg);})
+   .catch(e=>{console.error(e);showToast('Error al enviar la orden');});
+};
+
 /* ============ INVENTARIO ============ */
 function renderInv(){
   const inv=getInv();const body=document.getElementById('inv-body');
@@ -707,19 +836,19 @@ function renderInv(){
   document.getElementById('inv-value').textContent=money(val);
   updateBadge('badge-inv',low);
 }
-window.openInvModal=function(){
+window.openInvModal=function(){ ensureOwner(()=>{
   document.getElementById('invModalTitle').textContent='Nuevo insumo';
   ['inv-id','inv-name','inv-stock','inv-unit','inv-min','inv-cost'].forEach(i=>document.getElementById(i).value='');
   openModal('invModal');
-};
-window.editInv=function(id){
+});};
+window.editInv=function(id){ ensureOwner(()=>{
   const it=getInv().find(x=>x.id===id);if(!it)return;
   document.getElementById('invModalTitle').textContent='Editar insumo';
   document.getElementById('inv-id').value=it.id;document.getElementById('inv-name').value=it.name;
   document.getElementById('inv-stock').value=it.stock;document.getElementById('inv-unit').value=it.unit||'';
   document.getElementById('inv-min').value=it.min;document.getElementById('inv-cost').value=it.cost||0;
   openModal('invModal');
-};
+});};
 window.saveInv=function(){
   const name=document.getElementById('inv-name').value.trim();if(!name){showToast('Pon un nombre');return;}
   let id=+document.getElementById('inv-id').value;
@@ -729,9 +858,9 @@ window.saveInv=function(){
   db.ref('inventory/'+id).set({id,...obj});
   closeModal('invModal');showToast('Insumo guardado');
 };
-window.delInv=function(id){if(!confirm('¿Eliminar este insumo?'))return;db.ref('inventory/'+id).remove();};
+window.delInv=function(id){ ensureOwner(()=>{if(!confirm('¿Eliminar este insumo?'))return;db.ref('inventory/'+id).remove();});};
 let moveMode='in';
-window.openMove=function(id,mode){
+window.openMove=function(id,mode){ ensureOwner(()=>{
   moveMode=mode;const it=getInv().find(x=>x.id===id);if(!it)return;
   document.getElementById('move-id').value=id;
   document.getElementById('moveTitle').textContent=(mode==='in'?'Entrada':'Salida')+' de stock';
@@ -740,7 +869,7 @@ window.openMove=function(id,mode){
   document.getElementById('move-expense').checked=mode==='in';
   document.getElementById('move-expense-wrap').classList.toggle('hidden',mode!=='in');
   openModal('moveModal');
-};
+});};
 window.applyMove=function(){
   const id=+document.getElementById('move-id').value;const q=+document.getElementById('move-qty').value||0;
   if(q<=0){showToast('Cantidad inválida');return;}
@@ -952,6 +1081,7 @@ function setupListeners(){
     Object.values(v).forEach(r=>{if(r&&r.product)recipesCache[norm(r.product)]=r;});
     renderAll();
   });
+  db.ref('settings/cashFloat').on('value',s=>{cashFloatCache=+s.val()||0;renderAll();});
 }
 if(typeof db!=='undefined'&&db){
   setupListeners();
