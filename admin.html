@@ -83,10 +83,29 @@ tr.low td{background:rgba(239,68,68,.08)}
       <button class="tab-btn" data-tab="inventario"><i class="fas fa-boxes-stacked"></i> Inventario <span class="tab-badge hidden" id="badge-inv">0</span></button>
       <button class="tab-btn" data-tab="costos"><i class="fas fa-tags"></i> Costos <i class="fas fa-lock text-xs opacity-60"></i></button>
       <button class="tab-btn" data-tab="reportes"><i class="fas fa-chart-line"></i> Reportes <i class="fas fa-lock text-xs opacity-60"></i></button>
+      <button class="tab-btn" data-tab="config"><i class="fas fa-gear"></i> Config <i class="fas fa-lock text-xs opacity-60"></i></button>
     </nav>
-    <div class="hidden md:flex items-center gap-2 text-xs text-white/40" id="clock"></div>
+    <div class="flex items-center gap-2">
+      <span id="user-chip" class="text-xs text-white/60 hidden sm:inline"></span>
+      <button id="logout-btn" class="btn btn-ghost hidden" style="padding:.3rem .6rem" onclick="appLogout()" title="Cerrar sesión"><i class="fas fa-right-from-bracket"></i></button>
+      <div class="hidden lg:flex items-center gap-2 text-xs text-white/40" id="clock"></div>
+    </div>
   </div>
 </header>
+
+<!-- Pantalla de inicio de sesión -->
+<div id="loginScreen" class="fixed inset-0 z-[500] flex items-center justify-center p-4" style="background:#0c0c0d">
+  <div class="card p-8 w-full max-w-sm text-center">
+    <span class="logo-font text-3xl gold font-bold">Shell's Bread</span>
+    <p class="text-white/40 text-sm mt-1 mb-6">Panel de administración</p>
+    <div class="space-y-3 text-left">
+      <div><label class="text-xs text-white/50">Usuario</label><input class="inp mt-1" id="app-user" autocomplete="off" onkeydown="if(event.key==='Enter')document.getElementById('app-pass').focus()"></div>
+      <div><label class="text-xs text-white/50">Contraseña</label><input class="inp mt-1" id="app-pass" type="password" onkeydown="if(event.key==='Enter')doAppLogin()"></div>
+    </div>
+    <p id="app-login-err" class="text-red-400 text-sm mt-2 hidden">Usuario o contraseña incorrectos.</p>
+    <button class="btn btn-gold w-full mt-5" onclick="doAppLogin()"><i class="fas fa-right-to-bracket"></i> Entrar</button>
+  </div>
+</div>
 
 <main class="max-w-7xl mx-auto px-4 py-5">
 
@@ -200,8 +219,9 @@ tr.low td{background:rgba(239,68,68,.08)}
     </div>
 
     <div id="printArea">
-    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
+    <div class="grid grid-cols-2 lg:grid-cols-6 gap-3 mb-5">
       <div class="card p-4"><p class="text-white/40 text-xs uppercase tracking-wider">Ventas</p><p class="stat-num gold" id="rep-ventas">$0</p><p class="text-white/30 text-xs" id="rep-nventas">0 pedidos</p></div>
+      <div class="card p-4"><p class="text-white/40 text-xs uppercase tracking-wider">Ticket promedio</p><p class="stat-num text-yellow-200" id="rep-promedio">$0</p></div>
       <div class="card p-4"><p class="text-white/40 text-xs uppercase tracking-wider">Personas</p><p class="stat-num text-blue-300" id="rep-personas">0</p><p class="text-white/30 text-xs">clientes</p></div>
       <div class="card p-4"><p class="text-white/40 text-xs uppercase tracking-wider">Costo productos (COGS)</p><p class="stat-num text-orange-400" id="rep-cogs">$0</p></div>
       <div class="card p-4"><p class="text-white/40 text-xs uppercase tracking-wider">Gastos</p><p class="stat-num text-red-400" id="rep-gastos">$0</p></div>
@@ -218,10 +238,37 @@ tr.low td{background:rgba(239,68,68,.08)}
         <div id="rep-metodos"></div>
       </div>
     </div>
-    <div class="card p-4 mb-5">
-      <h3 class="font-semibold mb-3 text-white/70">Clientes por día</h3>
-      <div id="rep-personas-dia"></div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
+      <div class="card p-4">
+        <h3 class="font-semibold mb-3 text-white/70">Ventas por cajero</h3>
+        <div id="rep-cajeros"></div>
+      </div>
+      <div class="card p-4">
+        <h3 class="font-semibold mb-3 text-white/70">Clientes por día</h3>
+        <div id="rep-personas-dia"></div>
+      </div>
     </div>
+    <div class="card p-4 mb-5">
+      <h3 class="font-semibold mb-3 text-white/70">Cortes de caja</h3>
+      <div id="rep-cortes"></div>
+    </div>
+    </div>
+
+    <div class="card p-4 mb-5">
+      <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+        <h3 class="font-semibold text-white/70">Archivo de tickets</h3>
+        <input class="inp w-auto" id="rep-ticket-search" placeholder="Buscar por nombre..." oninput="renderReportes()" style="max-width:220px">
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead><tr class="text-white/40 text-xs uppercase tracking-wider border-b border-white/10">
+            <th class="text-left p-2">Fecha/Hora</th><th class="text-left p-2">Cliente</th><th class="text-left p-2">Cobró</th>
+            <th class="text-right p-2">Total</th><th class="text-center p-2">Ticket</th>
+          </tr></thead>
+          <tbody id="rep-tickets-body"></tbody>
+        </table>
+        <p id="rep-tickets-empty" class="text-white/30 text-center py-8">Sin tickets en este periodo.</p>
+      </div>
     </div>
 
     <div class="card p-4">
@@ -238,6 +285,27 @@ tr.low td{background:rgba(239,68,68,.08)}
           <tbody id="gastos-body"></tbody>
         </table>
         <p id="gastos-empty" class="text-white/30 text-center py-8">Sin gastos en este periodo.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CONFIG ===================== -->
+  <section id="tab-config" class="hidden">
+    <h1 class="logo-font text-2xl font-bold mb-1">Configuración</h1>
+    <p class="text-white/40 text-sm mb-5">Usuarios del sistema. Los empleados solo ven Cocina, Caja e Inventario; no pueden editar/eliminar insumos ni ver Costos/Reportes/Config.</p>
+    <div class="grid md:grid-cols-2 gap-5">
+      <div class="card p-5">
+        <h3 class="font-semibold mb-3"><i class="fas fa-user-plus gold"></i> Nuevo usuario</h3>
+        <div class="space-y-3">
+          <div><label class="text-xs text-white/50">Nombre</label><input class="inp mt-1" id="cfg-name" placeholder="Ej: Juan Pérez"></div>
+          <div><label class="text-xs text-white/50">Usuario (para entrar)</label><input class="inp mt-1" id="cfg-user" placeholder="Ej: juan"></div>
+          <div><label class="text-xs text-white/50">Contraseña</label><input class="inp mt-1" id="cfg-pass"></div>
+          <button class="btn btn-gold w-full" onclick="saveUser()"><i class="fas fa-plus"></i> Crear usuario</button>
+        </div>
+      </div>
+      <div class="card p-5">
+        <h3 class="font-semibold mb-3"><i class="fas fa-users gold"></i> Usuarios registrados</h3>
+        <div id="cfg-list"></div>
       </div>
     </div>
   </section>
@@ -347,8 +415,8 @@ tr.low td{background:rgba(239,68,68,.08)}
       </div>
       <div class="w-full md:w-80 flex flex-col bg-black/30 border-t md:border-t-0 border-white/10 min-h-0">
         <div class="p-3 border-b border-white/10 grid grid-cols-2 gap-2">
-          <input id="pos-name" class="inp" placeholder="Nombre / Mesa *">
-          <input id="pos-phone" class="inp" placeholder="Celular (opcional)" inputmode="numeric">
+          <input id="pos-name" class="inp" placeholder="Nombre / Mesa *" oninput="posValidate()">
+          <input id="pos-phone" class="inp" placeholder="Celular (opcional)" inputmode="numeric" oninput="posValidate()">
         </div>
         <div id="pos-ticket" class="flex-1 overflow-y-auto p-3 space-y-1" style="min-height:80px"></div>
         <div class="p-3 border-t border-white/10">
@@ -357,6 +425,24 @@ tr.low td{background:rgba(239,68,68,.08)}
           <button class="btn btn-ghost w-full mt-2" onclick="posClear()">Vaciar</button>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal extras -->
+<div class="modal-bg" id="extrasModal">
+  <div class="card p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <h3 class="logo-font text-xl font-bold mb-1" id="extras-title">Extras</h3>
+    <p class="text-white/40 text-sm mb-3">Elige un extra o escribe uno nuevo, pon el precio y agrégalo.</p>
+    <div id="extras-presets" class="flex flex-wrap gap-2 mb-3"></div>
+    <div class="grid grid-cols-3 gap-2 items-end">
+      <div class="col-span-2"><label class="text-xs text-white/50">Extra</label><input class="inp mt-1" id="extra-name" placeholder="Nombre del extra"></div>
+      <div><label class="text-xs text-white/50">Precio</label><input class="inp mt-1" id="extra-price" type="number" step="any" placeholder="$"></div>
+    </div>
+    <button class="btn btn-gold w-full mt-3" onclick="addExtra()"><i class="fas fa-plus"></i> Agregar extra</button>
+    <div id="extras-current" class="mt-4 space-y-1"></div>
+    <div class="flex gap-2 mt-5">
+      <button class="btn btn-ghost flex-1" onclick="closeModal('extrasModal')">Listo</button>
     </div>
   </div>
 </div>
@@ -378,11 +464,11 @@ tr.low td{background:rgba(239,68,68,.08)}
 
 <!-- Modal fondo de caja -->
 <div class="modal-bg" id="fondoModal">
-  <div class="card p-6 w-full max-w-sm">
+  <div class="card p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
     <h3 class="logo-font text-xl font-bold mb-1"><i class="fas fa-wallet gold"></i> Fondo de caja</h3>
-    <p class="text-white/40 text-sm mb-4">Dinero con el que empieza la caja para dar cambio (lo deja el dueño).</p>
-    <label class="text-xs text-white/50">Monto del fondo</label>
-    <input class="inp mt-1" id="fondo-input" type="number" step="any" placeholder="0">
+    <p class="text-white/40 text-sm mb-4">Cuenta los billetes y monedas con los que empieza la caja para dar cambio.</p>
+    <div id="fondo-denoms" class="space-y-1"></div>
+    <div class="flex justify-between items-center mt-4 pt-3 border-t border-white/10"><span class="text-white/60">Total del fondo</span><span id="fondo-total" class="gold font-bold text-2xl">$0</span></div>
     <div class="flex gap-2 mt-5">
       <button class="btn btn-ghost flex-1" onclick="closeModal('fondoModal')">Cancelar</button>
       <button class="btn btn-gold flex-1" onclick="saveFondo()">Guardar</button>
@@ -454,7 +540,7 @@ const SECTION_TITLES={alimentos:"Alimentos",desayunos:"Desayunos","pan-salado":"
 /* ============ Datos en tiempo real (Firebase) ============ */
 // Cachés locales que se llenan con los listeners de Firebase (ver setupListeners abajo).
 let ordersCache={}, invCache={}, costsCache={}, expCache={}, recipesCache={};
-let cashFloatCache=0;
+let cashFloatCache=0, fondoCounts={}, cortesCache={};
 let invView='insumos';
 function getOrders(){return Object.values(ordersCache).filter(Boolean);}
 function getInv(){return Object.values(invCache).filter(Boolean);}
@@ -464,6 +550,9 @@ const money=n=>'$'+ (Math.round((+n||0)*100)/100).toLocaleString('es-MX');
 const uid=()=>Date.now()+Math.floor(Math.random()*1000);
 const norm=s=>(s||'').toString().trim().toLowerCase();
 const itemLabel=i=>i.name+(i.size?' ('+i.size+')':'');
+const extrasSum=i=>(i.extras||[]).reduce((s,e)=>s+(+e.price||0),0);
+const lineTotal=i=>(+i.price||0)*(+i.qty||0)+extrasSum(i);
+const orderTotal=items=>(items||[]).reduce((s,i)=>s+lineTotal(i),0);
 const ea=s=>(s||'').toString().replace(/\\/g,'\\\\').replace(/'/g,"\\'");
 const slugify=s=>(s||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'-');
 const sizeName=s=>s.label.split('$')[0].trim();
@@ -488,60 +577,90 @@ function beep(){
   }catch(e){}
 }
 
-/* ============ Acceso del dueño (Costos y Reportes) ============ */
+/* ============ Usuarios, sesión y roles ============ */
 const OWNER={user:'marce',pass:'shellsmarce1'};
-const PROTECTED=['costos','reportes'];
-let ownerAuth=false;
-try{ownerAuth=sessionStorage.getItem('shellsOwnerAuth')==='1';}catch(e){}
-let pendingTab=null, pendingAction=null, authAction=null;
-function openLogin(){
+const OWNER_TABS=['costos','reportes','config'];
+let usersCache={}, currentUser=null;
+try{currentUser=JSON.parse(sessionStorage.getItem('shellsUser')||'null');}catch(e){}
+function isOwner(){return !!currentUser&&currentUser.role==='owner';}
+function userLabel(){return currentUser?(currentUser.name||currentUser.user):'';}
+
+window.doAppLogin=function(){
+  const u=norm(document.getElementById('app-user').value);
+  const p=document.getElementById('app-pass').value;
+  let user=null;
+  if(u===OWNER.user&&p===OWNER.pass) user={user:'marce',name:'Marce',role:'owner'};
+  else{const rec=usersCache[u]; if(rec&&String(rec.pass)===p) user={user:rec.user,name:rec.name||rec.user,role:'empleado'};}
+  if(!user){document.getElementById('app-login-err').classList.remove('hidden');return;}
+  currentUser=user;try{sessionStorage.setItem('shellsUser',JSON.stringify(user));}catch(e){}
+  document.getElementById('app-login-err').classList.add('hidden');
+  document.getElementById('app-user').value='';document.getElementById('app-pass').value='';
+  applySession();
+};
+window.appLogout=function(){currentUser=null;try{sessionStorage.removeItem('shellsUser');}catch(e){}activeTab='cocina';applySession();};
+function applySession(){
+  const logged=!!currentUser;
+  document.getElementById('loginScreen').classList.toggle('hidden',logged);
+  document.querySelectorAll('.tab-btn').forEach(b=>{
+    const t=b.dataset.tab;
+    b.classList.toggle('hidden', !(logged&&(isOwner()||!OWNER_TABS.includes(t))));
+  });
+  document.getElementById('user-chip').textContent = logged? (userLabel()+(isOwner()?' · Dueño':'')) : '';
+  const lo=document.getElementById('logout-btn'); if(lo)lo.classList.toggle('hidden',!logged);
+  if(logged){ if(!isOwner()&&OWNER_TABS.includes(activeTab))activeTab='cocina'; switchTab(activeTab||'cocina'); }
+}
+// Autorización que SIEMPRE pide la contraseña del dueño (editar/eliminar insumos).
+let authAction=null;
+function authorize(fn){
+  authAction=fn;
   document.getElementById('login-err').classList.add('hidden');
-  document.getElementById('login-pass').value='';
+  document.getElementById('login-pass').value='';document.getElementById('login-user').value='';
   openModal('loginModal');
   setTimeout(()=>{var el=document.getElementById('login-user');if(el)el.focus();},100);
 }
-// Sesión: pide la contraseña una vez (para Costos/Reportes y para agregar insumos).
-function ensureOwner(fn){
-  if(ownerAuth){fn();return;}
-  pendingAction=fn; authAction=null; pendingTab=null;
-  openLogin();
-}
-// Autorización: pide la contraseña SIEMPRE (para editar/eliminar insumos), aunque haya sesión.
-function authorize(fn){
-  authAction=fn; pendingAction=null; pendingTab=null;
-  openLogin();
-}
-window.cancelLogin=function(){authAction=null;pendingAction=null;pendingTab=null;closeModal('loginModal');};
+window.cancelLogin=function(){authAction=null;closeModal('loginModal');};
 window.doLogin=function(){
-  const u=document.getElementById('login-user').value.trim();
+  const u=norm(document.getElementById('login-user').value);
   const p=document.getElementById('login-pass').value;
   if(u===OWNER.user&&p===OWNER.pass){
     document.getElementById('login-err').classList.add('hidden');
     document.getElementById('login-user').value='';document.getElementById('login-pass').value='';
     closeModal('loginModal');
-    if(authAction){const a=authAction;authAction=null;a();return;}   // no deja sesión abierta
-    ownerAuth=true;try{sessionStorage.setItem('shellsOwnerAuth','1');}catch(e){}
-    if(pendingAction){const a=pendingAction;pendingAction=null;a();}
-    else{const t=pendingTab||'reportes';pendingTab=null;switchTab(t);}
+    if(authAction){const a=authAction;authAction=null;a();}
   }else{document.getElementById('login-err').classList.remove('hidden');}
 };
-window.logoutOwner=function(){
-  ownerAuth=false;try{sessionStorage.removeItem('shellsOwnerAuth');}catch(e){}
-  switchTab('cocina');showToast('Sesión cerrada');
+window.logoutOwner=function(){switchTab('cocina');};
+
+/* ============ Config: alta de usuarios ============ */
+window.saveUser=function(){
+  const name=document.getElementById('cfg-name').value.trim();
+  const user=norm(document.getElementById('cfg-user').value);
+  const pass=document.getElementById('cfg-pass').value;
+  if(!name||!user||!pass){showToast('Completa nombre, usuario y contraseña');return;}
+  if(user===OWNER.user){showToast('Ese usuario está reservado');return;}
+  db.ref('users/'+user).set({user,name,pass,role:'empleado'});
+  document.getElementById('cfg-name').value='';document.getElementById('cfg-user').value='';document.getElementById('cfg-pass').value='';
+  showToast('Usuario creado');
 };
+window.delUser=function(u){if(!confirm('¿Eliminar este usuario?'))return;db.ref('users/'+u).remove();};
+function renderConfig(){
+  const list=document.getElementById('cfg-list');if(!list)return;
+  const us=Object.values(usersCache).filter(Boolean);
+  list.innerHTML = `<div class="flex items-center justify-between py-2 border-b border-white/10"><div><p class="text-sm font-medium">Marce <span class="tag" style="background:rgba(245,196,0,.15);color:#F5C400">Dueño</span></p><p class="text-xs text-white/40">usuario: marce</p></div></div>` +
+   (us.length?us.map(u=>`<div class="flex items-center justify-between py-2 border-b border-white/5">
+      <div><p class="text-sm font-medium">${u.name||u.user}</p><p class="text-xs text-white/40">usuario: ${u.user}</p></div>
+      <button class="btn btn-ghost" style="padding:.3rem .55rem" onclick="delUser('${ea(u.user)}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+    </div>`).join(''):'<p class="text-white/30 text-sm py-3 text-center">Sin empleados aún.</p>');
+}
 
 /* ============ Tabs ============ */
 let activeTab='cocina';
 document.querySelectorAll('.tab-btn').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
 function switchTab(t){
-  if(PROTECTED.includes(t)&&!ownerAuth){
-    pendingTab=t; pendingAction=null; authAction=null;
-    openLogin();
-    return;
-  }
+  if(OWNER_TABS.includes(t)&&!isOwner()){showToast('Solo el dueño puede entrar aquí');return;}
   activeTab=t;
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
-  ['cocina','caja','inventario','costos','reportes'].forEach(s=>document.getElementById('tab-'+s).classList.toggle('hidden',s!==t));
+  ['cocina','caja','inventario','costos','reportes','config'].forEach(s=>document.getElementById('tab-'+s).classList.toggle('hidden',s!==t));
   renderAll();
 }
 
@@ -568,7 +687,7 @@ function renderCocina(){
   const grid=document.getElementById('cocina-grid');
   document.getElementById('cocina-empty').classList.toggle('hidden',orders.length>0);
   grid.innerHTML=orders.map(o=>{
-    const itemsHtml=o.items.map(i=>`<div class="py-1 border-b border-white/5"><div class="flex justify-between"><span><span class="gold font-bold">${i.qty}×</span> ${i.name}${i.size?` <span class="text-white/40">(${i.size})</span>`:''}</span></div>${i.note?`<div class="text-yellow-200/90 text-xs pl-4"><i class="fas fa-angle-right"></i> ${i.note}</div>`:''}</div>`).join('');
+    const itemsHtml=o.items.map(i=>`<div class="py-1 border-b border-white/5"><div class="flex justify-between"><span><span class="gold font-bold">${i.qty}×</span> ${i.name}${i.size?` <span class="text-white/40">(${i.size})</span>`:''}</span></div>${i.note?`<div class="text-yellow-200/90 text-xs pl-4"><i class="fas fa-angle-right"></i> ${i.note}</div>`:''}${(i.extras||[]).map(e=>`<div class="text-green-300/90 text-xs pl-4"><i class="fas fa-plus"></i> ${e.name}</div>`).join('')}</div>`).join('');
     const next=o.status==='nuevo'?`<button class="btn btn-gold flex-1" onclick="setStatus(${o.id},'preparando')"><i class="fas fa-fire"></i> Preparar</button>`
       :o.status==='preparando'?`<button class="btn btn-green flex-1" onclick="setStatus(${o.id},'listo')"><i class="fas fa-check"></i> Marcar listo</button>`
       :`<span class="btn flex-1" style="background:rgba(34,197,94,.15);color:#86efac;cursor:default"><i class="fas fa-bell"></i> Listo · esperando caja</span>`;
@@ -604,7 +723,7 @@ function renderCaja(){
         <span class="font-bold">${o.table||'Sin mesa'}</span><span class="tag tag-${o.status}">${o.status}</span>
       </div>
       <p class="text-white/40 text-xs mb-2">#${String(o.id).slice(-4)} · ${o.items.reduce((s,i)=>s+i.qty,0)} art.${o.phone?` · <i class="fas fa-phone"></i> ${o.phone}`:''}</p>
-      <div class="text-xs text-white/60 mb-3">${o.items.map(i=>i.qty+'× '+itemLabel(i)+(i.note?' ('+i.note+')':'')).join(', ')}</div>
+      <div class="text-xs text-white/60 mb-3">${o.items.map(i=>i.qty+'× '+itemLabel(i)+(i.note?' ('+i.note+')':'')+((i.extras||[]).length?' +'+i.extras.map(e=>e.name).join(', +'):'')).join(', ')}</div>
       <div class="flex items-center justify-between mb-2">
         <span class="gold font-bold text-xl">${money(o.total)}</span>
         <button class="btn btn-green" onclick="openPay(${o.id})"><i class="fas fa-cash-register"></i> Cobrar</button>
@@ -653,7 +772,7 @@ window.confirmPay=function(){
   const order=ordersCache[id];if(!order)return;
   if(method==='efectivo'){const c=+document.getElementById('pay-cash').value||0;
     if(c&&c<order.total){if(!confirm('El efectivo es menor al total. ¿Cobrar de todos modos?'))return;}}
-  db.ref('orders/'+id).update({status:'cobrado',paidAt:new Date().toISOString(),paymentMethod:method});
+  db.ref('orders/'+id).update({status:'cobrado',paidAt:new Date().toISOString(),paymentMethod:method,paidBy:userLabel()});
   // Descuenta el inventario: usa la receta del platillo; si no tiene receta, coincide por nombre.
   const deduct={}; // invId -> cantidad total a restar
   (order.items||[]).forEach(it=>{
@@ -682,16 +801,39 @@ function corteCaja(){
   const tar=c.filter(o=>o.paymentMethod==='tarjeta').reduce((s,o)=>s+o.total,0);
   const tra=c.filter(o=>o.paymentMethod==='transferencia').reduce((s,o)=>s+o.total,0);
   const gas=getExp().filter(e=>inRange(e.fecha,'today')).reduce((s,e)=>s+(+e.monto),0);
-  alert(`CORTE DE CAJA — ${todayStr().split('-').reverse().join('/')}\n\nPedidos cobrados: ${c.length}\nEfectivo (ventas): ${money(efe)}\nTarjeta: ${money(tar)}\nTransferencia: ${money(tra)}\nGastos del día: ${money(gas)}\n────────────────\nVENTA TOTAL: ${money(tot)}\n\nFondo inicial: ${money(cashFloatCache)}\nEfectivo esperado en cajón: ${money(cashFloatCache+efe)}\n(fondo + efectivo de ventas)`);
+  const cajon=cashFloatCache+efe;
+  const by=userLabel();
+  // Guarda el corte para el reporte (quién lo hizo).
+  const cid=uid();
+  db.ref('cortes/'+cid).set({id:cid,ts:new Date().toISOString(),fecha:todayStr(),user:by,pedidos:c.length,tot,efe,tar,tra,gas,fondo:cashFloatCache,cajon});
+  alert(`CORTE DE CAJA — ${todayStr().split('-').reverse().join('/')}\nCajero: ${by}\n\nPedidos cobrados: ${c.length}\nEfectivo (ventas): ${money(efe)}\nTarjeta: ${money(tar)}\nTransferencia: ${money(tra)}\nGastos del día: ${money(gas)}\n────────────────\nVENTA TOTAL: ${money(tot)}\n\nFondo inicial: ${money(cashFloatCache)}\nEfectivo esperado en cajón: ${money(cajon)}\n(fondo + efectivo de ventas)`);
 }
+const DENOMS=[1000,500,200,100,50,20,10,5,2,1,0.5];
+const denomKey=d=>'d'+String(d).replace('.','_');
+const denomLabel=d=>d>=20?('Billete $'+d):('Moneda $'+(d===0.5?'0.50':d));
 window.openFondo=function(){
-  document.getElementById('fondo-input').value=cashFloatCache||'';
+  document.getElementById('fondo-denoms').innerHTML=DENOMS.map(d=>{
+    const k=denomKey(d);const cnt=(fondoCounts&&fondoCounts[k])||'';
+    return `<div class="flex items-center gap-3 py-1 border-b border-white/5">
+      <span class="w-28 text-sm">${denomLabel(d)}</span><span class="text-white/40 text-xs">×</span>
+      <input class="inp fondo-cnt" style="width:80px;padding:.3rem .5rem" type="number" min="0" step="1" data-d="${d}" value="${cnt}" placeholder="0" oninput="calcFondo()">
+      <span class="text-white/40 text-xs flex-1 text-right" id="fondo-sub-${k}">$0</span>
+    </div>`;
+  }).join('');
+  calcFondo();
   openModal('fondoModal');
 };
+window.calcFondo=function(){
+  let total=0;
+  document.querySelectorAll('#fondo-denoms .fondo-cnt').forEach(i=>{const d=+i.dataset.d,c=+i.value||0,sub=d*c;total+=sub;const el=document.getElementById('fondo-sub-'+denomKey(d));if(el)el.textContent=money(sub);});
+  document.getElementById('fondo-total').textContent=money(total);
+  return total;
+};
 window.saveFondo=function(){
-  const n=+document.getElementById('fondo-input').value||0;
-  db.ref('settings/cashFloat').set(n);
-  closeModal('fondoModal');showToast('Fondo actualizado: '+money(n));
+  const counts={};let total=0;
+  document.querySelectorAll('#fondo-denoms .fondo-cnt').forEach(i=>{const d=+i.dataset.d,c=+i.value||0;if(c>0){counts[denomKey(d)]=c;total+=d*c;}});
+  db.ref('settings/fondo').set({counts,total});
+  closeModal('fondoModal');showToast('Fondo actualizado: '+money(total));
 };
 
 /* ============ TICKET: WhatsApp e impresión ============ */
@@ -714,9 +856,10 @@ function buildTicketDoc(o){
   if(o.phone){doc.text('Tel: '+o.phone,cx,y,{align:'center'});y+=4;}
   doc.text('------------------------------',cx,y,{align:'center'});y+=4;
   (o.items||[]).forEach(i=>{
-    const lines=doc.splitTextToSize(`${i.qty}x ${itemLabel(i)}`+(i.note?` — ${i.note}`:''),54);
+    const extraTxt=(i.extras||[]).map(e=>' + '+e.name+' ('+money(e.price)+')').join('');
+    const lines=doc.splitTextToSize(`${i.qty}x ${itemLabel(i)}`+(i.note?` — ${i.note}`:'')+extraTxt,54);
     doc.text(lines,4,y);
-    doc.text(money(i.price*i.qty),76,y,{align:'right'});
+    doc.text(money(lineTotal(i)),76,y,{align:'right'});
     y+=4*lines.length;
   });
   doc.text('------------------------------',cx,y,{align:'center'});y+=5;
@@ -745,7 +888,7 @@ async function shareTicketDoc(o){
 }
 window.shareTicket=function(id){const o=ordersCache[id];if(!o)return;shareTicketDoc(o);};
 function ticketHTML(o){
-  const rows=(o.items||[]).map(i=>`<tr><td>${i.qty}x ${itemLabel(i)}${i.note?'<br><span style="font-size:10px">• '+i.note+'</span>':''}</td><td style="text-align:right;vertical-align:top">${money(i.price*i.qty)}</td></tr>`).join('');
+  const rows=(o.items||[]).map(i=>`<tr><td>${i.qty}x ${itemLabel(i)}${i.note?'<br><span style="font-size:10px">• '+i.note+'</span>':''}${(i.extras||[]).map(e=>'<br><span style="font-size:10px">+ '+e.name+' '+money(e.price)+'</span>').join('')}</td><td style="text-align:right;vertical-align:top">${money(lineTotal(i))}</td></tr>`).join('');
   return `<html><head><meta charset="utf-8"><title>Ticket #${String(o.id).slice(-4)}</title><style>
     *{font-family:'Courier New',monospace}body{width:280px;margin:0 auto;padding:10px;color:#000}
     h2{text-align:center;margin:4px 0}p{margin:2px 0;text-align:center;font-size:12px}
@@ -772,10 +915,11 @@ window.printTicket=function(id){
 };
 
 /* ============ POS: Nueva orden / Editar (personal) ============ */
-let posCart=[], posCat='alimentos', posSel={}, posEditId=null;
+const EXTRAS_PRESET=['Esencia de Lavanda','Vainilla','Mocha','Caramelo','Salted Chocolate Caramel','Jamón y Queso'];
+let posCart=[], posCat='alimentos', posSel={}, posEditId=null, extraLine=null;
 function posKey(n,s){return n+'|'+(s||'');}
 function posReset(){posCart=[];posCat='alimentos';posSel={};posEditId=null;
-  document.getElementById('pos-name').value='';document.getElementById('pos-phone').value='';}
+  document.getElementById('pos-name').value='';document.getElementById('pos-phone').value='';posValidate();}
 window.openPOS=function(){
   posReset();
   document.getElementById('pos-title').innerHTML='<i class="fas fa-plus-circle gold"></i> Nueva orden';
@@ -785,20 +929,27 @@ window.openPOS=function(){
 window.openPOSedit=function(id){
   const o=ordersCache[id]; if(!o)return;
   posReset(); posEditId=id;
-  posCart=(o.items||[]).map(i=>({name:i.name,price:+i.price,size:i.size||'',qty:i.qty,note:i.note||''}));
+  posCart=(o.items||[]).map(i=>({name:i.name,price:+i.price,size:i.size||'',qty:i.qty,note:i.note||'',extras:(i.extras||[]).map(e=>({name:e.name,price:+e.price||0}))}));
   document.getElementById('pos-name').value=o.table||'';
   document.getElementById('pos-phone').value=o.phone||'';
   document.getElementById('pos-title').innerHTML='<i class="fas fa-pen gold"></i> Editar orden #'+String(id).slice(-4);
   document.getElementById('pos-send-btn').innerHTML='<i class="fas fa-floppy-disk"></i> Guardar cambios';
-  renderPOS(); openModal('posModal');
+  renderPOS(); posValidate(); openModal('posModal');
 };
 window.posClear=function(){ posCart=[]; renderPOS(); };
 window.posSetCat=function(c){ posCat=c; renderPOS(); };
 window.posPickSize=function(name,price,size){ posSel[slugify(name)]={price:+price,size}; renderPOS(); };
 window.posSetNote=function(idx,val){ if(posCart[idx])posCart[idx].note=val; };
+window.posValidate=function(){
+  const n=document.getElementById('pos-name'), ph=document.getElementById('pos-phone');
+  if(!n)return;
+  const okName=n.value.trim().length>0;
+  n.style.borderColor=okName?'#22c55e':'#ef4444';
+  ph.style.borderColor=ph.value.trim().length>0?'#22c55e':'rgba(255,255,255,.15)';
+};
 window.posAdd=function(name,price,size){
   size=size||''; const f=posCart.find(i=>posKey(i.name,i.size)===posKey(name,size));
-  if(f)f.qty++; else posCart.push({name,price:+price,size,qty:1,note:''});
+  if(f)f.qty++; else posCart.push({name,price:+price,size,qty:1,note:'',extras:[]});
   renderPOS();
 };
 window.posRemove=function(name,size){
@@ -806,6 +957,32 @@ window.posRemove=function(name,size){
   if(idx<0)return; if(posCart[idx].qty>1)posCart[idx].qty--; else posCart.splice(idx,1);
   renderPOS();
 };
+/* --- extras --- */
+window.openExtras=function(idx){
+  extraLine=idx; const it=posCart[idx]; if(!it)return;
+  document.getElementById('extras-title').textContent='Extras · '+itemLabel(it);
+  document.getElementById('extra-name').value='';document.getElementById('extra-price').value='';
+  document.getElementById('extras-presets').innerHTML=EXTRAS_PRESET.map(e=>`<button class="size-btn" onclick="document.getElementById('extra-name').value='${ea(e)}';document.getElementById('extra-price').focus()">${e}</button>`).join('');
+  renderExtrasCurrent();
+  openModal('extrasModal');
+};
+function renderExtrasCurrent(){
+  const it=posCart[extraLine]; const cont=document.getElementById('extras-current');
+  const ex=(it&&it.extras)||[];
+  cont.innerHTML=ex.length?('<p class="text-xs text-white/40 mb-1">Extras agregados:</p>'+ex.map((e,i)=>`<div class="flex items-center justify-between text-sm border-b border-white/5 py-1"><span>${e.name}</span><span class="gold">${money(e.price)} <button class="text-white/40 hover:text-red-400 ml-2" onclick="removeExtra(${i})">✕</button></span></div>`).join('')):'';
+}
+window.addExtra=function(){
+  const it=posCart[extraLine]; if(!it)return;
+  const name=document.getElementById('extra-name').value.trim();
+  const price=+document.getElementById('extra-price').value||0;
+  if(!name){showToast('Escribe el extra');return;}
+  if(price<=0){showToast('Pon el precio del extra');return;}
+  it.extras=it.extras||[]; it.extras.push({name,price});
+  document.getElementById('extra-name').value='';document.getElementById('extra-price').value='';
+  renderExtrasCurrent(); renderPOS();
+};
+window.removeExtra=function(i){const it=posCart[extraLine];if(!it||!it.extras)return;it.extras.splice(i,1);renderExtrasCurrent();renderPOS();};
+
 function renderPOS(){
   document.getElementById('pos-cat-tabs').innerHTML=Object.keys(MENU_DATA).map(c=>
     `<button class="tab-btn ${c===posCat?'active':''}" onclick="posSetCat('${c}')">${SECTION_TITLES[c]}</button>`).join('');
@@ -824,23 +1001,26 @@ function renderPOS(){
   else tk.innerHTML=posCart.map((i,idx)=>`<div class="border-b border-white/5 py-1.5">
       <div class="flex items-center justify-between gap-2 text-sm">
         <span class="flex-1 min-w-0 truncate">${i.qty}× ${itemLabel(i)}</span>
-        <span class="gold">${money(i.price*i.qty)}</span>
+        <span class="gold">${money(lineTotal(i))}</span>
         <button class="text-white/40 hover:text-red-400 ml-1" onclick="posRemove('${ea(i.name)}','${ea(i.size||'')}')">✕</button>
       </div>
+      ${(i.extras||[]).map(e=>`<div class="text-xs text-green-300/80 pl-2">+ ${e.name} · ${money(e.price)}</div>`).join('')}
       <input class="inp mt-1" style="padding:.25rem .5rem;font-size:.72rem" value="${(i.note||'').replace(/"/g,'&quot;')}" placeholder="Nota (ej. sin cebolla)" oninput="posSetNote(${idx},this.value)">
+      <button class="text-[#F5C400] text-xs mt-1 hover:underline" onclick="openExtras(${idx})"><i class="fas fa-plus-circle"></i> Extras</button>
     </div>`).join('');
-  document.getElementById('pos-total').textContent=money(posCart.reduce((s,i)=>s+i.price*i.qty,0));
+  document.getElementById('pos-total').textContent=money(orderTotal(posCart));
 }
 window.posSend=function(){
   if(!posCart.length){showToast('Agrega productos');return;}
   const name=document.getElementById('pos-name').value.trim();
-  if(!name){showToast('Escribe nombre / mesa');return;}
+  if(!name){showToast('Escribe el nombre');posValidate();return;}
   const phone=document.getElementById('pos-phone').value.trim();
-  const items=posCart.map(i=>({name:i.name,price:+i.price,size:i.size||'',qty:i.qty,note:i.note||''}));
-  const total=items.reduce((s,i)=>s+i.price*i.qty,0);
+  const items=posCart.map(i=>({name:i.name,price:+i.price,size:i.size||'',qty:i.qty,note:i.note||'',extras:(i.extras||[]).map(e=>({name:e.name,price:+e.price||0}))}));
+  const total=orderTotal(items);
+  const by=userLabel();
   // Modo edición: actualiza la orden existente (misma comanda).
   if(posEditId){
-    db.ref('orders/'+posEditId).update({items,total,table:name,phone});
+    db.ref('orders/'+posEditId).update({items,total,table:name,phone,editadoPor:by});
     closeModal('posModal');showToast('Orden actualizada ✓');posReset();return;
   }
   const id=Date.now();
@@ -849,10 +1029,10 @@ window.posSend=function(){
     const ex=Object.values(all).find(o=>o&&o.table&&norm(o.table)===norm(name)&&o.status!=='cobrado'&&o.status!=='cancelado');
     if(ex){
       const merged=Array.isArray(ex.items)?ex.items.map(i=>({...i})):[];
-      items.forEach(c=>{const f=merged.find(i=>posKey(i.name,i.size)===posKey(c.name,c.size));if(f){f.qty+=c.qty;if(c.note)f.note=c.note;}else merged.push({...c});});
-      return db.ref('orders/'+ex.id).update({items:merged,total:merged.reduce((s,i)=>s+i.price*i.qty,0),status:'nuevo',phone:phone||ex.phone||''}).then(()=>'Se sumó al pedido de '+ex.table+' 🍞');
+      items.forEach(c=>{const f=merged.find(i=>posKey(i.name,i.size)===posKey(c.name,c.size));if(f){f.qty+=c.qty;if(c.note)f.note=c.note;if(c.extras&&c.extras.length)f.extras=(f.extras||[]).concat(c.extras);}else merged.push({...c});});
+      return db.ref('orders/'+ex.id).update({items:merged,total:orderTotal(merged),status:'nuevo',phone:phone||ex.phone||''}).then(()=>'Se sumó al pedido de '+ex.table+' 🍞');
     }
-    return db.ref('orders/'+id).set({id,table:name,phone,notes:'',items,total,status:'nuevo',createdAt:new Date().toISOString()}).then(()=>'¡Orden enviada a cocina! 🍞');
+    return db.ref('orders/'+id).set({id,table:name,phone,notes:'',items,total,status:'nuevo',createdAt:new Date().toISOString(),createdBy:by}).then(()=>'¡Orden enviada a cocina! 🍞');
   }).then(msg=>{posReset();closeModal('posModal');showToast(msg);})
    .catch(e=>{console.error(e);showToast('Error al enviar la orden');});
 };
@@ -1043,6 +1223,34 @@ function renderReportes(){
   const g=document.getElementById('rep-ganancia');g.textContent=money(ganancia);
   g.className='stat-num '+(ganancia>=0?'text-green-400':'text-red-400');
   document.getElementById('rep-margen').textContent='Margen '+margen+'%';
+  // ticket promedio
+  document.getElementById('rep-promedio').textContent=money(sales.length?ventas/sales.length:0);
+  // ventas por cajero
+  const caj={};sales.forEach(o=>{const k=o.paidBy||'—';caj[k]=(caj[k]||0)+o.total;});
+  const cajArr=Object.entries(caj).sort((a,b)=>b[1]-a[1]);const maxc=cajArr.length?cajArr[0][1]:1;
+  document.getElementById('rep-cajeros').innerHTML=cajArr.length?cajArr.map(([n,v])=>`
+    <div class="mb-2"><div class="flex justify-between text-sm mb-1"><span>${n}</span><span class="gold font-semibold">${money(v)}</span></div>
+    <div class="h-1.5 bg-white/10 rounded-full"><div class="h-1.5 bg-gold rounded-full" style="width:${v/maxc*100}%"></div></div></div>`).join(''):'<p class="text-white/30 text-sm py-4 text-center">Sin ventas.</p>';
+  // cortes de caja del periodo
+  const cortes=Object.values(cortesCache).filter(Boolean).filter(x=>inRange(x.fecha||x.ts,range)).sort((a,b)=>(b.ts||'')<(a.ts||'')?-1:1);
+  document.getElementById('rep-cortes').innerHTML=cortes.length?cortes.map(x=>`
+    <div class="flex items-center justify-between text-sm border-b border-white/5 py-1.5">
+      <div><span class="font-medium">${fmtDateTime(x.ts)}</span> · <span class="text-white/60">${x.user||'—'}</span></div>
+      <div class="text-right"><span class="gold font-semibold">${money(x.tot)}</span> <span class="text-white/40 text-xs">(cajón ${money(x.cajon)})</span></div>
+    </div>`).join(''):'<p class="text-white/30 text-sm py-4 text-center">Sin cortes en este periodo.</p>';
+  // archivo de tickets
+  const q=norm((document.getElementById('rep-ticket-search')||{}).value||'');
+  const tickets=sales.filter(o=>!q||norm(o.table).includes(q)).sort((a,b)=>(b.paidAt||'')<(a.paidAt||'')?-1:1);
+  document.getElementById('rep-tickets-empty').classList.toggle('hidden',tickets.length>0);
+  document.getElementById('rep-tickets-body').innerHTML=tickets.map(o=>`<tr class="border-b border-white/5">
+    <td class="p-2 text-white/60">${fmtDateTime(o.paidAt)}</td>
+    <td class="p-2 font-medium">${o.table||'—'}</td>
+    <td class="p-2 text-white/60">${o.paidBy||'—'}</td>
+    <td class="p-2 text-right gold">${money(o.total)}</td>
+    <td class="p-2 text-center"><div class="flex gap-1 justify-center">
+      <button class="btn btn-ghost" style="padding:.25rem .5rem" onclick="shareTicket(${o.id})" title="PDF"><i class="fab fa-whatsapp text-green-400"></i></button>
+      <button class="btn btn-ghost" style="padding:.25rem .5rem" onclick="printTicket(${o.id})" title="Imprimir"><i class="fas fa-print"></i></button>
+    </div></td></tr>`).join('');
   // personas (clientes distintos que compraron en el periodo)
   document.getElementById('rep-personas').textContent=new Set(sales.map(o=>norm(o.table))).size;
   // clientes por día
@@ -1100,6 +1308,7 @@ function renderAll(){
   else if(activeTab==='inventario'){renderInv();if(invView==='recetas')renderRecetas();}
   else if(activeTab==='costos')renderCostos();
   else if(activeTab==='reportes')renderReportes();
+  else if(activeTab==='config')renderConfig();
   // badges siempre actualizados aunque no esté la pestaña activa
   updateBadge('badge-cocina',getOrders().filter(o=>ACTIVE.includes(o.status)).length);
   updateBadge('badge-caja',getOrders().filter(o=>o.status==='listo').length);
@@ -1128,7 +1337,9 @@ function setupListeners(){
     Object.values(v).forEach(r=>{if(r&&r.product)recipesCache[norm(r.product)]=r;});
     renderAll();
   });
-  db.ref('settings/cashFloat').on('value',s=>{cashFloatCache=+s.val()||0;renderAll();});
+  db.ref('settings/fondo').on('value',s=>{const v=s.val();cashFloatCache=v?(+v.total||0):0;fondoCounts=(v&&v.counts)||{};renderAll();});
+  db.ref('users').on('value',s=>{usersCache=s.val()||{};renderConfig();});
+  db.ref('cortes').on('value',s=>{cortesCache=s.val()||{};if(activeTab==='reportes')renderReportes();});
 }
 if(typeof db!=='undefined'&&db){
   setupListeners();
@@ -1143,6 +1354,7 @@ setInterval(renderAll,30000);
 function tick(){const c=document.getElementById('clock');if(c)c.innerHTML='<i class="far fa-clock"></i> '+fmtTime();}
 setInterval(tick,1000);tick();
 
+applySession();
 renderAll();
 </script>
 </body>
