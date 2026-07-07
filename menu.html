@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú - Shell's Bread</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <script>
+      // ===== Configuración de Firebase (proyecto receptorshellvinedos) =====
+      const firebaseConfig = {
+        apiKey: "AIzaSyC7Ui4dFC63AwK4uJr41l_1oq1pE-mMtEQ",
+        authDomain: "receptorshellvinedos.firebaseapp.com",
+        databaseURL: "https://receptorshellvinedos-default-rtdb.firebaseio.com",
+        projectId: "receptorshellvinedos",
+        storageBucket: "receptorshellvinedos.firebasestorage.app",
+        messagingSenderId: "506263763767",
+        appId: "1:506263763767:web:b341298cae4f145debb8b2",
+        measurementId: "G-99466M80BL"
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500&display=swap');
+        html,body{font-family:'Poppins',sans-serif;background-image:url('font.png');background-size:cover;background-position:center;background-attachment:fixed;color:#fff;min-height:100vh}
+        .logo-font{font-family:'Playfair Display',serif}
+        .category-card{opacity:0;transform:translateY(80px);transition:all .9s ease-out;border-radius:1.75rem;overflow:hidden;box-shadow:0 15px 35px rgba(0,0,0,.5);padding:12px;background:rgba(0,0,0,.25)}
+        .category-card.appear{opacity:1;transform:translateY(0)}
+        .category-card:hover{transform:scale(1.03) translateY(-8px);box-shadow:0 25px 50px rgba(0,0,0,.6)}
+        .modal{background-image:url('font.png');background-size:cover;background-position:center}
+        .modal-content{background:rgba(20,20,20,.95);backdrop-filter:blur(12px)}
+        .section-title{color:#fff;text-shadow:0 0 15px rgba(0,0,0,.8)}
+        .carousel{position:relative;border-radius:1.5rem;overflow:hidden;margin-bottom:2rem}
+        .carousel-inner{display:flex;transition:transform .6s ease-in-out}
+        .carousel-slide{min-width:100%}
+        .carousel-slide img{width:100%;height:340px;object-fit:cover}
+        .carousel-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.7);color:#fff;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;z-index:10;transition:all .3s}
+        .carousel-btn:hover{background:#F5C400;color:#000}
+        .carousel-prev{left:15px}.carousel-next{right:15px}
+        .carousel-dots{position:absolute;bottom:15px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:10}
+        .dot{width:11px;height:11px;background:rgba(255,255,255,.5);border-radius:50%;cursor:pointer;transition:all .3s}
+        .dot.active{background:#F5C400;transform:scale(1.4)}
+        #cart-panel{position:fixed;right:-440px;top:0;bottom:0;width:420px;max-width:100vw;background:rgba(10,10,10,.97);backdrop-filter:blur(20px);border-left:1px solid rgba(245,196,0,.3);z-index:200;transition:right .4s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column}
+        #cart-panel.open{right:0}
+        .cart-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:199;display:none}
+        .cart-overlay.active{display:block}
+        .add-btn{transition:all .2s}
+        .add-btn:hover{transform:scale(1.1)}
+        .qty-btn{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;transition:all .15s;cursor:pointer}
+        .cart-badge{position:absolute;top:-8px;right:-8px;background:#F5C400;color:#000;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+        .item-row{border-bottom:1px solid rgba(255,255,255,.08)}
+        .item-row:last-child{border-bottom:none}
+        .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#F5C400;color:#000;padding:10px 22px;border-radius:99px;font-weight:600;font-size:.9rem;z-index:999;transition:transform .35s;pointer-events:none}
+        .toast.show{transform:translateX(-50%) translateY(0)}
+        .size-btn{border:1px solid rgba(245,196,0,.4);border-radius:8px;padding:4px 12px;font-size:.78rem;cursor:pointer;transition:all .2s;background:transparent;color:#fff}
+        .size-btn.selected{background:#F5C400;color:#000;border-color:#F5C400;font-weight:600}
+    </style>
+</head>
+<body class="overflow-x-hidden">
+
+<header class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+        <a href="index.html" class="flex items-center gap-2 text-white hover:text-orange-400 transition-colors">
+            <i class="fas fa-arrow-left text-2xl"></i>
+            <span class="text-sm font-medium tracking-wider hidden sm:block">REGRESAR AL INICIO</span>
+        </a>
+        <img src="log.png" alt="Shell's Bread" class="h-14 w-auto">
+        <button onclick="openCart()" class="relative p-2">
+            <i class="fas fa-shopping-bag text-2xl text-white hover:text-[#F5C400] transition-colors"></i>
+            <span id="cart-badge" class="cart-badge hidden">0</span>
+        </button>
+    </div>
+</header>
+
+<main class="pt-24 pb-16 px-4 sm:px-6 max-w-5xl mx-auto">
+    <h1 class="logo-font text-5xl sm:text-6xl font-bold text-center mb-12 tracking-wider text-[#F5C400]">MENÚ</h1>
+    <div class="space-y-6 sm:space-y-8" id="categories"></div>
+</main>
+
+<div id="modal" class="modal fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="modal-content rounded-3xl w-full max-w-2xl max-h-[92vh] overflow-y-auto relative border border-[#F5C400]/30 shadow-2xl">
+        <button onclick="closeModal()" class="absolute top-4 right-4 text-5xl text-white/80 hover:text-white z-20 transition">×</button>
+        <div class="p-8 sm:p-12" id="modal-content"></div>
+    </div>
+</div>
+
+<div class="cart-overlay" id="cart-overlay" onclick="closeCart()"></div>
+<div id="cart-panel">
+    <div class="p-5 flex items-center justify-between border-b border-white/10 bg-black/90 backdrop-blur z-10">
+        <h2 class="logo-font text-2xl text-[#F5C400] font-bold">Tu Pedido</h2>
+        <button onclick="closeCart()" class="text-white/60 hover:text-white text-3xl transition leading-none">×</button>
+    </div>
+    <div class="px-5 py-4 border-b border-white/10 space-y-3">
+        <div>
+            <label class="block text-white/60 text-xs uppercase tracking-widest mb-2">Nombre <span class="text-[#F5C400]">*</span></label>
+            <input id="table-input" type="text" placeholder="Tu nombre" class="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-[#F5C400]/60 placeholder-white/30">
+        </div>
+        <div>
+            <label class="block text-white/60 text-xs uppercase tracking-widest mb-2">Celular <span class="text-[#F5C400]">*</span></label>
+            <input id="phone-input" type="tel" inputmode="numeric" placeholder="10 dígitos" class="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-[#F5C400]/60 placeholder-white/30">
+        </div>
+    </div>
+    <div id="cart-items" class="px-5 py-4 space-y-2 flex-1">
+        <p class="text-white/30 text-sm text-center py-8">Tu carrito está vacío</p>
+    </div>
+    <div class="px-5 pb-4 border-t border-white/10 pt-4">
+        <label class="block text-white/60 text-xs uppercase tracking-widest mb-2">Notas del pedido</label>
+        <textarea id="order-notes" rows="2" placeholder="Alergias, especificaciones..." class="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-2 text-white text-sm resize-none focus:outline-none focus:border-[#F5C400]/60 placeholder-white/30"></textarea>
+    </div>
+    <div class="px-5 pb-8 pt-2">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-white/60 text-sm">Total estimado</span>
+            <span id="cart-total" class="text-[#F5C400] text-2xl font-bold">$0</span>
+        </div>
+        <button onclick="sendOrder()" class="w-full py-4 rounded-2xl font-bold text-lg" style="background:#F5C400;color:#000">
+            <i class="fas fa-paper-plane mr-2"></i>Enviar Pedido
+        </button>
+        <button onclick="clearCart()" class="w-full mt-3 py-2 text-white/30 hover:text-white/60 text-sm transition-colors">Vaciar carrito</button>
+    </div>
+</div>
+
+<!-- Carrito flotante -->
+<button id="float-cart" onclick="openCart()" class="hidden fixed left-1/2 -translate-x-1/2 bottom-5 z-[250] items-center gap-2 bg-[#F5C400] text-black font-bold px-5 py-3 rounded-full shadow-2xl hover:scale-105 transition-transform">
+    <i class="fas fa-shopping-bag"></i>
+    <span id="float-cart-count">0</span>
+    <span class="opacity-50">·</span>
+    <span id="float-cart-total">$0</span>
+    <span class="ml-1">Ver pedido →</span>
+</button>
+
+<div id="toast" class="toast"></div>
+
+<script>
+let MENU_DATA = {
+    alimentos:[
+        {name:"NEW YORK",desc:"Pastrami, Mozzarella, Tomate Cherry, mix de lechugas y aderezo de la casa sobre focaccia",price:220},
+        {name:"CHICAGO",desc:"Huevo revuelto con jamón de pavo, tomate cherry y mix de lechugas sobre focaccia",price:180},
+        {name:"BOSTON",desc:"Mezcla de 3 quesos con mix de lechugas y aderezo de la casa sobre focaccia",price:180},
+        {name:"SUNSHINE",desc:"Mix de vegetales con base de queso de cabra y mix de lechugas sobre focaccia",price:180}
+    ],
+    desayunos:[
+        {name:"HUEVOS MEDITERRÁNEOS",desc:"2 huevos estrellados tiernos sobre cama de xocodip sazonado en Shell's",price:160},
+        {name:"OMELETTE SHELL'S",desc:"Huevo con mix de vegetales y queso mozzarella, acompañado de una rebanada de hogaza",price:150},
+        {name:"SWEET BURRATA TOAST",desc:"Mix de la casa (plátano y dátil), burrata y nuez de topping",price:120},
+        {name:"FRENCH TOAST",desc:"2 rebanadas de hogaza integral o blanca con toppings (yogurt griego y mix de berries)",price:150}
+    ],
+    "pan-salado":[
+        {name:"Hogaza Blanca",desc:"",price:120},{name:"Hogaza Integral",desc:"",price:140},
+        {name:"Hogaza Nuez c/ Arándano",desc:"",price:160},{name:"Hogaza Semillas c/ Arándano",desc:"",price:160},
+        {name:"Hogaza Integral c/ Tomates Deshidratados",desc:"",price:150},{name:"Hogaza Centeno c/ Semillas",desc:"",price:190},
+        {name:"Pan de Caja Blanco",desc:"",price:120},{name:"Pan de Caja Integral",desc:"",price:140},
+        {name:"Pan de Caja Integral c/ Tomates Deshidratados",desc:"",price:150},{name:"Pan de Caja Centeno c/ Semillas",desc:"",price:190},
+        {name:"Baguette Semillas / Nuez con Arándano",desc:"",price:80},{name:"Baguette Integral",desc:"",price:70},
+        {name:"Croissant Natural",desc:"",price:40},{name:"Croissant Jamón y Queso",desc:"",price:75},
+        {name:"Croissant Jamón, Queso y Arúgula",desc:"",price:85},
+        {name:"Focaccia Blanca",desc:"",price:40},{name:"Focaccia Integral",desc:"",price:45},{name:"Focaccia Italiana",desc:"",price:50},
+        {name:"Pan de Hamburguesa",desc:"",price:30},{name:"Bisquet Integral con Arándano",desc:"",price:25},{name:"Bisquet Integral",desc:"",price:20}
+    ],
+    "pan-dulce":[
+        {name:"Conchas (Vainilla y Chocolate)",desc:"",price:50},{name:"Chocolatín",desc:"",price:50},
+        {name:"Rol de Canela",desc:"",price:60},{name:"Galleta Chocolate Chip Nuez",desc:"",price:50},
+        {name:"Galleta Cacao c/ Choco Blanco",desc:"",price:50},{name:"Galleta Cookies and Cream",desc:"",price:50},
+        {name:"Brookie",desc:"",price:75},{name:"Croissant Pistache",desc:"",price:75},
+        {name:"Croissant Almendras",desc:"",price:75},{name:"Croissant Lotus",desc:"",price:75}
+    ],
+    bebidas:[
+        {name:"Latte (Rocks)",desc:"En las rocas",price:70,sizes:[{label:"Chico $70",price:70},{label:"Grande $80",price:80}]},
+        {name:"Americano (Rocks)",desc:"En las rocas",price:55},
+        {name:"Dirty Chai (Rocks)",desc:"En las rocas",price:80,sizes:[{label:"Chico $80",price:80},{label:"Grande $90",price:90}]},
+        {name:"Matcha (Rocks)",desc:"En las rocas",price:80},{name:"Brown Sugar Latte",desc:"En las rocas",price:90},
+        {name:"Frappe Mocha",desc:"Frappe",price:80},{name:"Frappe Matcha",desc:"Frappe",price:80},
+        {name:"Frappe Chai",desc:"Frappe",price:75,sizes:[{label:"Chico $75",price:75},{label:"Grande $85",price:85}]},
+        {name:"Frappe Cajeta",desc:"Frappe",price:90},
+        {name:"Capuchino",desc:"Caliente",price:85},{name:"Americano Caliente",desc:"Caliente",price:55},
+        {name:"Latte Caliente",desc:"Caliente",price:80},{name:"Expreso",desc:"Caliente",price:40}
+    ]
+};
+
+// El dueño puede editar el menú desde el panel; se guarda en Firebase y se refleja aquí en vivo.
+let currentSec=null;
+try{
+  if(typeof db!=='undefined'&&db){
+    db.ref('menu').on('value',s=>{
+      const fb=s.val();
+      if(fb&&typeof fb==='object'&&Object.keys(fb).length){
+        const m={};
+        Object.keys(fb).forEach(k=>{
+          const arr=Array.isArray(fb[k])?fb[k]:Object.values(fb[k]||{});
+          m[k]=arr.filter(Boolean).map(it=>{const o={name:it.name,price:+it.price||0,desc:it.desc||''};if(it.sizes){const sz=(Array.isArray(it.sizes)?it.sizes:Object.values(it.sizes)).filter(Boolean).map(z=>({label:z.label,price:+z.price||0}));if(sz.length)o.sizes=sz;}return o;});
+        });
+        // conserva solo las categorías que el menú del cliente ya muestra
+        Object.keys(m).forEach(k=>{MENU_DATA[k]=m[k];});
+        const modal=document.getElementById('modal');
+        if(currentSec&&modal&&!modal.classList.contains('hidden'))openModal(currentSec);
+      }
+    });
+  }
+}catch(e){console.warn('Menú en vivo no disponible:',e);}
+
+const sections=[
+    {id:"alimentos",title:"ALIMENTOS",img:"alimentos.png"},
+    {id:"desayunos",title:"DESAYUNOS",img:"desayunos.png"},
+    {id:"pan-salado",title:"PAN SALADO",img:"pan-salado.png"},
+    {id:"pan-dulce",title:"PAN DULCE",img:"pan-dulce.png"},
+    {id:"bebidas",title:"BEBIDAS",img:"bebidas.png"}
+];
+
+const container=document.getElementById('categories');
+sections.forEach((sec,index)=>{
+    const card=document.createElement('button');
+    card.className='category-card w-full aspect-video relative';
+    card.innerHTML=`<div class="category-image-container rounded-3xl overflow-hidden shadow-xl"><img src="${sec.img}" class="w-full h-full object-cover"></div><div class="absolute inset-x-0 bottom-8"><div class="text-center"><h2 class="logo-font text-4xl sm:text-5xl font-bold tracking-wider section-title">${sec.title}</h2></div></div>`;
+    card.onclick=()=>openModal(sec);
+    container.appendChild(card);
+    setTimeout(()=>card.classList.add('appear'),100+index*150);
+});
+
+let autoIntervals={},currentSlides={};
+
+function createCarousel(sectionId){
+    let images=Array.from({length:3},(_,i)=>{
+        if(sectionId==="alimentos")return`carualimentos${i+1}.png`;
+        if(sectionId==="desayunos")return`cardesayunos${i+1}.png`;
+        if(sectionId==="pan-salado")return`carpansalado${i+1}.png`;
+        if(sectionId==="pan-dulce")return`carpandulce${i+1}.png`;
+        if(sectionId==="bebidas")return`carbebidas${i+1}.png`;
+    });
+    let html=`<div class="carousel" id="carousel-${sectionId}"><div class="carousel-inner" id="inner-${sectionId}">`;
+    images.forEach((img,i)=>{html+=`<div class="carousel-slide ${i===0?'':'hidden'}" data-index="${i}"><img src="${img}" alt="${sectionId} ${i+1}"></div>`;});
+    html+=`</div><button class="carousel-btn carousel-prev" onclick="prevSlide('${sectionId}')">‹</button><button class="carousel-btn carousel-next" onclick="nextSlide('${sectionId}')">›</button><div class="carousel-dots" id="dots-${sectionId}"></div></div>`;
+    return html;
+}
+
+function initCarousel(sectionId){
+    const dotsContainer=document.getElementById(`dots-${sectionId}`);
+    const slides=document.querySelectorAll(`#inner-${sectionId} .carousel-slide`);
+    currentSlides[sectionId]=0;
+    dotsContainer.innerHTML='';
+    slides.forEach((_,i)=>{
+        const dot=document.createElement('div');
+        dot.className=`dot ${i===0?'active':''}`;
+        dot.onclick=()=>goToSlide(sectionId,i);
+        dotsContainer.appendChild(dot);
+    });
+    updateCarousel(sectionId);
+    if(autoIntervals[sectionId])clearInterval(autoIntervals[sectionId]);
+    autoIntervals[sectionId]=setInterval(()=>nextSlide(sectionId),3000);
+}
+
+function updateCarousel(sectionId){
+    const inner=document.getElementById(`inner-${sectionId}`);
+    const slides=document.querySelectorAll(`#inner-${sectionId} .carousel-slide`);
+    const dots=document.querySelectorAll(`#dots-${sectionId} .dot`);
+    inner.style.transform=`translateX(-${currentSlides[sectionId]*100}%)`;
+    slides.forEach((s,i)=>s.classList.toggle('hidden',i!==currentSlides[sectionId]));
+    dots.forEach((d,i)=>d.classList.toggle('active',i===currentSlides[sectionId]));
+}
+
+window.nextSlide=function(sectionId){
+    const count=document.querySelectorAll(`#inner-${sectionId} .carousel-slide`).length;
+    currentSlides[sectionId]=(currentSlides[sectionId]+1)%count;
+    updateCarousel(sectionId);
+};
+window.prevSlide=function(sectionId){
+    const count=document.querySelectorAll(`#inner-${sectionId} .carousel-slide`).length;
+    currentSlides[sectionId]=(currentSlides[sectionId]-1+count)%count;
+    updateCarousel(sectionId);
+};
+window.goToSlide=function(sectionId,index){currentSlides[sectionId]=index;updateCarousel(sectionId);};
+
+function slugify(s){return s.toLowerCase().replace(/[^a-z0-9]/g,'-');}
+function ea(s){return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+
+let MODAL={};
+function renderItemControl(slug){
+    const el=document.getElementById('ctrl-'+slug);
+    const m=MODAL[slug];
+    if(!el||!m)return;
+    const key=m.name+'|'+(m.size||'');
+    const ci=cart.find(i=>(i.name+'|'+(i.size||''))===key);
+    const qty=ci?ci.qty:0;
+    if(qty<=0){
+        el.innerHTML=`<button class="add-btn bg-[#F5C400] text-black w-9 h-9 rounded-full flex items-center justify-center font-bold text-xl" onclick="addToCart('${ea(m.name)}',${m.price},'${ea(m.desc)}','${ea(m.size||'')}')">+</button>`;
+    }else{
+        el.innerHTML=`<div class="flex items-center gap-2 bg-black/40 rounded-full px-1 py-0.5">
+            <button class="qty-btn bg-white/15 hover:bg-white/30 text-white" onclick="removeFromCart('${ea(m.name)}','${ea(m.size||'')}')">−</button>
+            <span class="text-[#F5C400] font-bold w-6 text-center">${qty}</span>
+            <button class="qty-btn bg-[#F5C400] text-black" onclick="addToCart('${ea(m.name)}',${m.price},'${ea(m.desc)}','${ea(m.size||'')}')">+</button>
+        </div>`;
+    }
+}
+function refreshModalControls(){Object.keys(MODAL).forEach(renderItemControl);}
+
+function openModal(sec){
+    currentSec=sec;
+    const modal=document.getElementById('modal');
+    const content=document.getElementById('modal-content');
+    const items=MENU_DATA[sec.id]||[];
+    MODAL={};
+    let itemsHtml=items.map(item=>{
+        const hasSizes=item.sizes&&item.sizes.length>0;
+        const slug=slugify(item.name);
+        const sizeName=s=>s.label.split('$')[0].trim();
+        const sizesHtml=hasSizes?`<div class="flex gap-2 mt-2 flex-wrap" id="sizes-${slug}">`+item.sizes.map((s,i)=>`<button class="size-btn ${i===0?'selected':''}" onclick="selectSize('${slug}',${i},${s.price},'${ea(item.name)}','${ea(sizeName(s))}')">${s.label}</button>`).join('')+`</div>`:'';
+        const displayPrice=hasSizes?item.sizes[0].price:item.price;
+        const initSize=hasSizes?sizeName(item.sizes[0]):'';
+        MODAL[slug]={name:item.name,desc:item.desc||'',price:displayPrice,size:initSize};
+        return`<div class="flex justify-between items-start border-b border-white/20 pb-4 gap-4"><div class="flex-1"><span class="font-bold block">${item.name}</span>${item.desc?`<small class="text-white/60 block">${item.desc}</small>`:''}${sizesHtml}</div><div class="flex items-center gap-3 flex-shrink-0"><span class="font-bold text-lg text-[#F5C400]" id="price-${slug}">$${displayPrice}</span><div id="ctrl-${slug}"></div></div></div>`;
+    }).join('');
+    content.innerHTML=`<h2 class="logo-font text-5xl font-bold text-center mb-8 text-white">${sec.title}</h2>${createCarousel(sec.id)}<div class="space-y-4">${itemsHtml}</div>`;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    refreshModalControls();
+    setTimeout(()=>initCarousel(sec.id),150);
+}
+
+window.selectSize=function(slug,idx,price,itemName,size){
+    document.querySelectorAll(`#sizes-${slug} .size-btn`).forEach((b,i)=>b.classList.toggle('selected',i===idx));
+    document.getElementById(`price-${slug}`).textContent=`$${price}`;
+    if(MODAL[slug]){MODAL[slug].size=size;MODAL[slug].price=price;}
+    renderItemControl(slug);
+};
+
+function closeModal(){
+    document.getElementById('modal').classList.add('hidden');
+    document.getElementById('modal').classList.remove('flex');
+    Object.values(autoIntervals).forEach(i=>clearInterval(i));
+    autoIntervals={};
+}
+document.addEventListener('keydown',e=>{if(e.key==="Escape")closeModal();});
+
+// ==================== CARRITO ====================
+let cart=[];
+
+function cartKey(name,size){return name+'|'+(size||'');}
+
+window.addToCart=function(name,price,desc,size){
+    size=size||'';
+    const existing=cart.find(i=>cartKey(i.name,i.size)===cartKey(name,size));
+    if(existing)existing.qty++;
+    else cart.push({name,price,desc,size,qty:1});
+    updateCartUI();
+    showToast(`+ ${name}${size?' ('+size+')':''}`);
+};
+
+window.removeFromCart=function(name,size){
+    const idx=cart.findIndex(i=>cartKey(i.name,i.size)===cartKey(name,size||''));
+    if(idx===-1)return;
+    if(cart[idx].qty>1)cart[idx].qty--;
+    else cart.splice(idx,1);
+    updateCartUI();
+};
+
+function clearCart(){cart=[];updateCartUI();}
+
+function updateCartUI(){
+    const badge=document.getElementById('cart-badge');
+    const total=cart.reduce((s,i)=>s+i.price*i.qty,0);
+    const count=cart.reduce((s,i)=>s+i.qty,0);
+    badge.textContent=count;
+    count>0?badge.classList.remove('hidden'):badge.classList.add('hidden');
+    document.getElementById('cart-total').textContent=`$${total}`;
+    const fc=document.getElementById('float-cart');
+    const cartOpen=document.getElementById('cart-panel').classList.contains('open');
+    if(count>0&&!cartOpen){fc.classList.remove('hidden');fc.classList.add('flex');}
+    else{fc.classList.add('hidden');fc.classList.remove('flex');}
+    document.getElementById('float-cart-count').textContent=count+(count===1?' art.':' art.');
+    document.getElementById('float-cart-total').textContent=`$${total}`;
+    const el=document.getElementById('cart-items');
+    if(cart.length===0){el.innerHTML=`<p class="text-white/30 text-sm text-center py-8">Tu carrito está vacío</p>`;refreshModalControls();return;}
+    el.innerHTML=cart.map(item=>`<div class="item-row py-3 flex items-center justify-between gap-3"><div class="flex-1 min-w-0"><p class="text-white text-sm font-medium truncate">${item.name}${item.size?` <span class="text-white/50">(${item.size})</span>`:''}</p><p class="text-[#F5C400] text-xs">$${item.price} c/u</p></div><div class="flex items-center gap-2"><button class="qty-btn bg-white/10 hover:bg-white/20 text-white" onclick="removeFromCart('${ea(item.name)}','${ea(item.size||'')}')">−</button><span class="text-white font-bold w-5 text-center text-sm">${item.qty}</span><button class="qty-btn bg-[#F5C400]/20 hover:bg-[#F5C400]/40 text-[#F5C400]" onclick="addToCart('${ea(item.name)}',${item.price},'','${ea(item.size||'')}')">+</button></div><span class="text-white font-bold text-sm w-14 text-right">$${item.price*item.qty}</span></div>`).join('');
+    refreshModalControls();
+}
+
+function openCart(){document.getElementById('cart-panel').classList.add('open');document.getElementById('cart-overlay').classList.add('active');document.getElementById('float-cart').classList.add('hidden');document.getElementById('float-cart').classList.remove('flex');}
+function closeCart(){document.getElementById('cart-panel').classList.remove('open');document.getElementById('cart-overlay').classList.remove('active');updateCartUI();}
+
+// ==================== ENVÍO DE PEDIDO (Firebase) ====================
+function sendOrder(){
+    if(cart.length===0){showToast('Agrega algo primero 😊');return;}
+    const table=document.getElementById('table-input').value.trim();
+    const phone=document.getElementById('phone-input').value.trim();
+    if(!table){showToast('Escribe tu nombre 🙂');return;}
+    if(phone.replace(/\D/g,'').length<10){showToast('Escribe un celular válido (10 dígitos) 📱');return;}
+    if(typeof db==='undefined'||!db){showToast('⚠️ Falta configurar Firebase');return;}
+    const newNotes=document.getElementById('order-notes').value.trim();
+    const id=Date.now();
+    const items=cart.map(i=>({...i}));
+    const norm=s=>(s||'').trim().toLowerCase();
+    db.ref('orders').once('value').then(snap=>{
+        const all=snap.val()||{};
+        // Si ya hay un pedido activo (no cobrado/cancelado) con el mismo nombre, se fusiona.
+        const existing=Object.values(all).find(o=>o&&o.table&&norm(o.table)===norm(table)&&o.status!=='cobrado'&&o.status!=='cancelado');
+        if(existing){
+            const merged=Array.isArray(existing.items)?existing.items.map(i=>({...i})):[];
+            items.forEach(c=>{
+                const f=merged.find(i=>cartKey(i.name,i.size)===cartKey(c.name,c.size));
+                if(f)f.qty+=c.qty; else merged.push({...c});
+            });
+            const total=merged.reduce((s,i)=>s+i.price*i.qty,0);
+            const notes=[existing.notes,newNotes].filter(Boolean).join(' | ');
+            return db.ref('orders/'+existing.id).update({items:merged,total,status:'nuevo',phone:phone||existing.phone||'',notes})
+                     .then(()=>'¡Se sumó a tu pedido anterior! 🍞');
+        }else{
+            const order={id,table,phone,notes:newNotes,items,total:items.reduce((s,i)=>s+i.price*i.qty,0),status:'nuevo',createdAt:new Date().toISOString()};
+            return db.ref('orders/'+id).set(order).then(()=>'¡Pedido enviado a cocina! 🍞');
+        }
+    }).then(msg=>{
+        clearCart();
+        document.getElementById('table-input').value='';
+        document.getElementById('phone-input').value='';
+        document.getElementById('order-notes').value='';
+        closeCart();
+        showToast(msg);
+    }).catch(err=>{console.error(err);showToast('Error al enviar. Revisa tu conexión.');});
+}
+
+function showToast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg;t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),2500);
+}
+</script>
+</body>
+</html>
